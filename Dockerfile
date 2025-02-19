@@ -1,16 +1,20 @@
-# Use the insiders build image from code-server
-FROM codercom/code-server:insiders
+# Start from the code-server base image (Insiders/latest version)
+FROM codercom/code-server:latest
 
-# (Optional) Install additional dependencies if needed (e.g., Python, Node)
-RUN sudo apt-get update && \
-    sudo apt-get install -y python3 python3-pip nodejs
+# (Optional) Switch to the coder user (already created in the base image)
+USER coder
 
-# Expose the default port that code-server listens on
+# (Optional) Copy in any VS Code settings or config files
+# COPY settings.json /home/coder/.local/share/code-server/User/settings.json
+
+# Ensure the container uses bash (optional, since base uses Debian)
+ENV SHELL=/bin/bash
+
+# (Optional) Install additional tools, e.g., Node.js, git, etc.
+# RUN sudo apt-get update && sudo apt-get install -y nodejs
+
+# Expose the default code-server port
 EXPOSE 8080
 
-# Set environment variables for code-server login (optional)
-# If Railway asks for these, you'll set them in Railway's settings.
-ENV PASSWORD=linan45445
-
-# Run code-server on port 8080 without authentication (if you prefer; otherwise, use the PASSWORD)
-CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "password"]
+# Use the default entrypoint provided by code-server image
+# (The base image’s entrypoint already runs code-server on 0.0.0.0:8080)
