@@ -1,26 +1,27 @@
-# Start from the code-server base image (Insiders/latest version)
+# Start from code-server base image
 FROM codercom/code-server:latest
 
-# (Optional) Switch to the coder user (already created in the base image)
+# Switch to coder user
 USER coder
-
-# (Optional) Copy in any VS Code settings or config files
-# COPY settings.json /home/coder/.local/share/code-server/User/settings.json
-
-# Ensure the container uses bash (optional, since base uses Debian)
 ENV SHELL=/bin/bash
 
-# (Optional) Install additional tools, e.g., Node.js, git, etc.
-# RUN sudo apt-get update && sudo apt-get install -y nodejs
+# Copy your Remote-SSH VSIX into the container
+COPY remote-ssh.vsix /tmp/remote-ssh.vsix
 
 # Expose the default code-server port
 EXPOSE 8080
 
-# Patch the Remote SSH extension manifest to force it to run in workspace mode
-RUN for d in /home/coder/.local/share/code-server/extensions/ms-vscode-remote.remote-ssh-*; do \
-      echo "Patching $d/package.json"; \
-      sed -i 's/"extensionKind": *\["ui"\]/"extensionKind": ["workspace"]/g' "$d/package.json"; \
+# 1) Install the Remote-SSH extension
+# 2) Patch its manifest to run in workspace mode
+RUN code-server --install-extension /tmp/remote-ssh.vsix && \
+    for d in /home/coder/.local/share/code-server/extensions/ms-vscode-remote.remote-ssh-*; do \
+      if [ -d "$d" ]; then \
+        echo "Patching $d/package.json"; \
+        sed -i 's/"extensionKind": *\["ui"\]/"extensionKind": ["workspace"]/g' "$d/package.json"; \
+      else \
+        echo "No Remote-SSH extension folder found at build time."; \
+      fi \
     done
 
-# Use the default entrypoint provided by code-server image, with auth disabled
+# Launch code-server with no auth (for testing)
 CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none"]
