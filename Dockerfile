@@ -16,5 +16,5 @@ ENV SHELL=/bin/bash
 # Expose the default code-server port
 EXPOSE 8080
 
-# Use the default entrypoint provided by code-server image
-# (The base image’s entrypoint already runs code-server on 0.0.0.0:8080)
+# Use the default entrypoint provided by code-server image, with auth disabled
+CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none"]
